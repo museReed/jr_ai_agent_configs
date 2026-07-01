@@ -1,0 +1,7 @@
+# Codex CLI — Output Style Enforcement
+# Add the line below to the top of your ~/.codex/config.toml (same level as personality)
+#
+# This reminds Codex to follow AGENTS.md response rules every session.
+# Without it, Codex may revert to default tone after a few turns.
+
+instructions = "Strictly follow the Output Style rules in AGENTS.md: conclusion first (bold), 3-5 bullets, comparisons in tables, no emoji/celebratory tone, medium length, plain language principle. Self-check before every response."

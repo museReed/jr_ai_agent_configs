@@ -1,7 +1,7 @@
 # AI Agent Response Rules — Workshop Edition
 
-> Works with **Claude Code** (`CLAUDE.md`) and **Codex CLI** (`AGENTS.md`).
-> Drop it into your project root to activate. For Codex, also add `instructions = "Strictly follow AGENTS.md rules"` in `~/.codex/config.toml`.
+> For **Claude Code**. Drop into your project root to activate.
+> Response formatting is controlled by `~/.claude/output-styles/concise-structured.md` — install it alongside this file.
 
 ---
 
