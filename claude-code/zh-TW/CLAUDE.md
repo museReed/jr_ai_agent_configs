@@ -1,7 +1,7 @@
 # AI Agent 回覆規則 — Workshop 版
 
-> 適用於 **Claude Code**（`CLAUDE.md`）和 **Codex CLI**（`AGENTS.md`）。
-> 貼進專案根目錄即生效。Codex 另在 `~/.codex/config.toml` 加 `instructions = "嚴格遵守 AGENTS.md 規則"` 強化服從度。
+> 適用於 **Claude Code**。貼進專案根目錄即生效。
+> 回覆格式由 `~/.claude/output-styles/concise-structured.md` 控制，請一併安裝。
 
 ---
 
