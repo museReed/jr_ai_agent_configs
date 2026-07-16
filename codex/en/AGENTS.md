@@ -78,6 +78,16 @@ Before sending every response, verify: conclusion on line one · no preamble · 
 
 ---
 
+## 3. Shell Commands
+
+- One shell call does one thing — **don't chain multiple commands with `&&` `||` `;`**. For multiple steps, run them as separate calls.
+- Don't use `cd x && cmd`; use an absolute path instead.
+- A single pipe `|` (like `grep foo | head`) counts as one data flow — that's fine.
+- Why: one command at a time keeps every step visible and makes per-command approval easy.
+- Note: Codex has no pre-exec hook that can intercept and block shell commands, so this is a **soft rule**; the hard block (hook) is Claude Code only.
+
+---
+
 ## Customization Ideas
 
 - **Domain glossary** — Define what specific terms mean in your field
