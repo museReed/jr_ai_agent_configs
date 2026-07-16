@@ -41,7 +41,7 @@ mkdir -p ~/.claude/output-styles
 cp claude-code/zh-CN/output-styles/concise-structured.md ~/.claude/output-styles/
 ```
 
-启用：开新 session → `/config` → Output style → Concise Structured。
+User Level 还要把 `"outputStyle": "Concise Structured"` 合并进 `~/.claude/settings.json`（先备份），再执行 `/clear` 或开新 session。不要只依赖选单：部分版本的 `/config` 不会列出自定义 style，`/output-style` 也可能不存在。
 
 ### 1c. Shell 不串接 hook
 
@@ -91,6 +91,8 @@ print(f"added {len(added)} allowlist rules")
 ```
 
 > 这份 starter 只含只读＋日常 git＋研究网域，**不含** `rm`／`sudo`／`curl`／`chmod`。之后想依自己习惯长出更多，用 `trust-commands` skill（在 jr_ai_agent_skills）。
+>
+> `echo` 在白名单内不代表 `echo ... > 文件` 可以写入任何位置；Claude Code 会另外检查重定向目标。Session 自动命名时只信任 `~/.ai-session-names/` 专用目录，不要放宽成任意写入。
 
 ---
 
@@ -105,7 +107,7 @@ print(f"added {len(added)} allowlist rules")
 
 打开 `codex/zh-CN/config.toml.example`，把 `personality` 和 `instructions` 两段贴到 `~/.codex/config.toml` 最上方（先备份）。
 
-> Codex 的 Shell 不串接是**软规则**（写在 AGENTS.md），没有硬挡 hook——这是两个工具的本质差异，跟使用者讲清楚。
+> Codex 的 Shell 不串接是**软规则**：Project Level 写在 AGENTS.md，User Level 直接写在 config.toml 的 `instructions`；没有硬挡 hook。
 
 ---
 
@@ -127,17 +129,18 @@ print(f"added {len(added)} allowlist rules")
 
 ### 验证 B：Shell 不串接
 
-叫 AI：**「用一个指令跑 `echo hi && echo bye`」**
+叫 AI：**「请执行 `echo hi && echo bye`」**。不要加“不要拆开”，否则会和待测规则冲突。
 
 - **Claude Code（硬挡）**：hook 应拦下，AI 看到「一次只跑一个指令」讯息，然后**自动拆成两次**跑完。若直接跑成功没被挡 → hook 没载入（确认开了新 session、settings.json 有注册）。
-- **Codex（软规则）**：AI 应**主动拆开**分两次跑，而不是串一行——因为 AGENTS.md 规则。若它直接串一行跑 → AGENTS.md 没生效。
+- **Codex（软规则）**：AI 应**主动拆开**分两次跑。Project Level 来自 AGENTS.md，User Level 来自 config.toml。
 
 ### 验证 C：白名单（只 Claude Code）
 
-叫 AI 跑一个白名单内的指令（如 `git status`）→ 应**不再跳出询问**直接执行。跑一个不在白名单的（如 `npm install`）→ 应该还是会问。
+在确定是 Git repo 的目录跑 `git status`，应直接执行。负向测试先建立空白 `/tmp/claude-permission-test/package.json`，再要求执行 `npm install --prefix /tmp/claude-permission-test`；看到权限询问后选 **No**。不要在没有 package.json 的 home 测，否则 AI 可能在调用工具前合理拒绝。
 
 ### 没通过怎么办
 
 1. 先确认开了**新 session**。
 2. Claude：`cat ~/.claude/settings.json` 看 `hooks.PreToolUse` 有没有 block-chained-bash、`permissions.allow` 有没有 starter 规则。
-3. 行为/格式没过：确认 CLAUDE.md／AGENTS.md 在对的层级、output style 有选到 Concise Structured。
+3. Claude 格式没过：确认 style 文件存在、frontmatter 名称与 settings 的 `outputStyle` 都是 `Concise Structured`，再 `/clear` 或重开。
+4. Codex User Level 没过：确认完整输出与 Shell 规则直接写在 config.toml `instructions`，不要只引用不存在的全局 AGENTS.md。

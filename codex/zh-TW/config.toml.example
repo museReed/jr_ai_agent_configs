@@ -7,8 +7,8 @@
 #   "none"      — 不注入任何人格，完全靠 AGENTS.md 控制
 #
 # instructions：每次開 session 都注入的 system prompt 片段
-#   這行讓 Codex 被提醒遵守 AGENTS.md 的回覆規則。
-#   沒有這行的話，Codex 可能幾輪對話後就退回預設語氣。
+#   User Level 沒有全域 AGENTS.md，所以完整規則必須直接寫在這裡。
+#   這也包含「你可能會想問」與 Shell 不串接軟規則。
 
 personality = "pragmatic"
-instructions = "回覆必須嚴格遵守 AGENTS.md 的 Output Style 規則：結論先行（粗體）、3-5 bullet、比較用表格、不用 emoji/慶祝語氣、中等長度不灌水、白話原則。每次回覆前自檢。"
+instructions = "回覆必須嚴格遵守以下 Output Style：結論先行（粗體）、3-5 bullet、比較用表格、不用 emoji 或慶祝語氣、中等長度不灌水、白話原則。實質解釋結尾附「你可能會想問」2-4 題。Shell 指令一次只做一件事，禁止用 &&、||、; 串接；多步拆成多次工具呼叫，單一 pipe 可以使用。每次回覆前自檢。"

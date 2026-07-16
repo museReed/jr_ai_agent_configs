@@ -41,7 +41,7 @@ mkdir -p ~/.claude/output-styles
 cp claude-code/en/output-styles/concise-structured.md ~/.claude/output-styles/
 ```
 
-Enable: open a new session → `/config` → Output style → Concise Structured.
+For User Level, also merge `"outputStyle": "Concise Structured"` into `~/.claude/settings.json` (back it up first), then run `/clear` or open a new session. Do not rely only on the picker: some versions do not list custom styles in `/config`, and `/output-style` may be unavailable.
 
 ### 1c. Shell no-chaining hook
 
@@ -91,6 +91,8 @@ print(f"added {len(added)} allowlist rules")
 ```
 
 > This starter contains only read-only + everyday git + research domains, and **excludes** `rm` / `sudo` / `curl` / `chmod`. When you later want to grow it to fit your own habits, use the `trust-commands` skill (in jr_ai_agent_skills).
+>
+> Allowing `echo` does not allow `echo ... > file` to write everywhere. Claude Code separately checks the redirect target. For session naming, trust only the dedicated `~/.ai-session-names/` directory rather than broad write access.
 
 ---
 
@@ -105,7 +107,7 @@ print(f"added {len(added)} allowlist rules")
 
 Open `codex/en/config.toml.example` and paste the `personality` and `instructions` sections to the top of `~/.codex/config.toml` (back up first).
 
-> Codex's shell no-chaining is a **soft rule** (written in AGENTS.md), with no hard-blocking hook — this is a fundamental difference between the two tools, so make it clear to the user.
+> Codex's shell no-chaining is a **soft rule**: it lives in AGENTS.md at Project Level and directly in config.toml `instructions` at User Level. There is no hard-blocking hook.
 
 ---
 
@@ -127,17 +129,18 @@ Paste this question: **"I want to start building a personal brand — should I s
 
 ### Verification B: Shell no-chaining
 
-Tell the AI: **"Run `echo hi && echo bye` in one command"**
+Tell the AI: **"Run `echo hi && echo bye`"**. Do not add “do not split it,” which conflicts with the rule being tested.
 
 - **Claude Code (hard block)**: the hook should block it, the AI sees the "run one command at a time" message, then **automatically splits it into two** runs. If it runs successfully without being blocked → the hook didn't load (confirm you opened a new session and that settings.json has the registration).
-- **Codex (soft rule)**: the AI should **split it up on its own** and run twice, rather than chaining one line — because of the AGENTS.md rule. If it chains one line directly → AGENTS.md didn't take effect.
+- **Codex (soft rule)**: the AI should **split it up on its own** and run twice. At Project Level this comes from AGENTS.md; at User Level it comes from config.toml.
 
 ### Verification C: Allowlist (Claude Code only)
 
-Have the AI run a command in the allowlist (like `git status`) → it should **no longer prompt** and just execute. Run one not in the allowlist (like `npm install`) → it should still prompt.
+Run `git status` inside a known Git repository; it should execute without prompting. For the negative test, create an empty `/tmp/claude-permission-test/package.json`, ask for `npm install --prefix /tmp/claude-permission-test`, confirm that approval is requested, and choose **No**. Do not test from home without a package.json, because the AI may correctly refuse before calling the tool.
 
 ### What if it doesn't pass
 
 1. First confirm you opened a **new session**.
 2. Claude: `cat ~/.claude/settings.json` and check whether `hooks.PreToolUse` has block-chained-bash and whether `permissions.allow` has the starter rules.
-3. Behavior/format didn't pass: confirm CLAUDE.md / AGENTS.md is at the right level and that the output style is set to Concise Structured.
+3. Claude format failed: confirm the style file exists, its frontmatter name exactly matches `Concise Structured`, and settings contain the same `outputStyle`; then `/clear` or restart.
+4. Codex User Level failed: confirm the complete output and shell rules are directly in config.toml `instructions`, not only a reference to a nonexistent global AGENTS.md.
