@@ -7,8 +7,8 @@
 #   "none"      — no personality injection, fully controlled by AGENTS.md
 #
 # instructions: System prompt snippet injected every session
-#   This reminds Codex to follow AGENTS.md response rules.
-#   Without it, Codex may revert to default tone after a few turns.
+#   User Level has no global AGENTS.md, so the complete rules live here.
+#   This also includes follow-up prompts and the soft shell no-chaining rule.
 
 personality = "pragmatic"
-instructions = "Strictly follow the Output Style rules in AGENTS.md: conclusion first (bold), 3-5 bullets, comparisons in tables, no emoji/celebratory tone, medium length, plain language principle. Self-check before every response."
+instructions = "Strictly follow this Output Style: conclusion first (bold), 3-5 bullets, comparisons in tables, no emoji or celebratory tone, medium length without filler, and plain language. End substantive explanations with 2-4 questions under 'You might want to ask'. Each shell tool call must do one thing: do not chain commands with &&, ||, or ;. Split multi-step work into separate tool calls; a single pipe is allowed. Self-check before every response."

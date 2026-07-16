@@ -41,7 +41,20 @@ mkdir -p ~/.claude/output-styles
 cp claude-code/zh-TW/output-styles/concise-structured.md ~/.claude/output-styles/
 ```
 
-啟用：開新 session → `/config` → Output style → Concise Structured。
+User Level 直接在 `~/.claude/settings.json` 設定 `outputStyle`，不要只依賴選單（部分版本的 `/config` 不會列出自訂 style，`/output-style` 也可能不存在）：
+
+```python
+import json, os, shutil, time
+p = os.path.expanduser("~/.claude/settings.json")
+if os.path.exists(p):
+    shutil.copy(p, p + ".bak." + time.strftime("%Y%m%d%H%M%S"))
+cfg = json.load(open(p)) if os.path.exists(p) else {}
+cfg["outputStyle"] = "Concise Structured"
+json.dump(cfg, open(p, "w"), indent=2, ensure_ascii=False)
+print("enabled Concise Structured output style")
+```
+
+設定後執行 `/clear` 或開新 session；Output Style 只在 session 啟動時載入。`/config` 看得到時仍可用它切換。
 
 ### 1c. Shell 不串接 hook
 
@@ -91,6 +104,8 @@ print(f"added {len(added)} allowlist rules")
 ```
 
 > 這份 starter 只含唯讀＋日常 git＋研究網域，**不含** `rm`／`sudo`／`curl`／`chmod`。之後想依自己習慣長出更多，用 `trust-commands` skill（在 jr_ai_agent_skills）。
+>
+> `echo` 在白名單內不代表 `echo ... > 檔案` 可寫入任何位置；Claude Code 會另外檢查重新導向的目標目錄。像 session 自動命名寫入 `~/.ai-session-names/` 時，應讓使用者選擇只信任該資料夾，不要放寬成任意寫入。
 
 ---
 
@@ -105,7 +120,7 @@ print(f"added {len(added)} allowlist rules")
 
 打開 `codex/zh-TW/config.toml.example`，把 `personality` 和 `instructions` 兩段貼到 `~/.codex/config.toml` 最上方（先備份）。
 
-> Codex 的 Shell 不串接是**軟規則**（寫在 AGENTS.md），沒有硬擋 hook——這是兩個工具的本質差異，跟使用者講清楚。
+> Codex 的 Shell 不串接是**軟規則**：Project Level 寫在 `AGENTS.md`，User Level 直接寫在 `config.toml` 的 `instructions`。Codex 沒有硬擋 hook——這是兩個工具的本質差異，跟使用者講清楚。
 
 ---
 
@@ -119,7 +134,7 @@ print(f"added {len(added)} allowlist rules")
 
 | 看什麼 | 通過 | 沒裝成功 |
 |---|---|---|
-| 結論先行 | 第一行就是粗體推薦 | 「好問題！讓我幫你分析…」 |
+| 結論先行 | 第一行在終端畫面中是粗體推薦 | 「好問題！讓我幫你分析…」 |
 | 比較用表格 | IG vs YT 用表格 | 散文一段段講 |
 | 語氣中性 | 無 emoji、無「太棒了！」 | 出現 🎉、「好主意！」 |
 | 中等長度 | 精簡不灌水 | 每平台展開好幾段 |
@@ -127,17 +142,21 @@ print(f"added {len(added)} allowlist rules")
 
 ### 驗證 B：Shell 不串接
 
-叫 AI：**「用一個指令跑 `echo hi && echo bye`」**
+叫 AI：**「請執行 `echo hi && echo bye`」**。不要再加「不要拆開」，否則會和待測規則互相衝突。
 
 - **Claude Code（硬擋）**：hook 應攔下，AI 看到「一次只跑一個指令」訊息，然後**自動拆成兩次**跑完。若直接跑成功沒被擋 → hook 沒載入（確認開了新 session、settings.json 有註冊）。
-- **Codex（軟規則）**：AI 應**主動拆開**分兩次跑，而不是串一行——因為 AGENTS.md 規則。若它直接串一行跑 → AGENTS.md 沒生效。
+- **Codex（軟規則）**：AI 應**主動拆開**分兩次跑，而不是串一行——Project Level 來自 AGENTS.md，User Level 來自 config.toml。若它直接串一行跑 → 對應層級的規則沒生效。
 
 ### 驗證 C：白名單（只 Claude Code）
 
-叫 AI 跑一個白名單內的指令（如 `git status`）→ 應**不再跳出詢問**直接執行。跑一個不在白名單的（如 `npm install`）→ 應該還是會問。
+1. 在一個確定是 Git repo 的目錄叫 AI 跑 `git status` → 應**不再跳出詢問**直接執行。不要在 home 測，否則只會得到「不是 Git repo」。
+2. 建立安全的空白 fixture（例如 `/tmp/claude-permission-test/package.json`，內容只需 `{"name":"permission-test","version":"1.0.0","private":true}`）。
+3. 叫 AI 跑 `npm install --prefix /tmp/claude-permission-test` → 應跳出權限詢問；選 **No**，不要真的安裝，也不要選「永遠允許 npm install」。
 
 ### 沒通過怎麼辦
 
 1. 先確認開了**新 session**。
 2. Claude：`cat ~/.claude/settings.json` 看 `hooks.PreToolUse` 有沒有 block-chained-bash、`permissions.allow` 有沒有 starter 規則。
-3. 行為/格式沒過：確認 CLAUDE.md／AGENTS.md 在對的層級、output style 有選到 Concise Structured。
+3. Claude 格式沒過：確認 `~/.claude/output-styles/concise-structured.md` 存在、frontmatter 的 `name` 是 `Concise Structured`、settings 的 `outputStyle` 完全同名，再 `/clear` 或重開 session。
+4. 終端複製文字可能不保留 Markdown 粗體標記；「粗體結論」要以 Claude Code 畫面為準，不要只看貼回來的純文字。
+5. Codex User Level 格式或 Shell 規則沒過：確認完整規則直接存在 `~/.codex/config.toml` 的 `instructions`，不要只引用不存在的全域 AGENTS.md。
