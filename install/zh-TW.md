@@ -79,6 +79,9 @@ print("registered block-chained-bash PreToolUse hook")
 ```python
 import json, os, shutil, time
 src = json.load(open("claude-code/starter-allowlist.json"))["permissions"]["allow"]
+# per-machine：Bash() 白名單不吃 ~/$HOME，安裝時展開成這台機器的絕對路徑
+home = os.path.expanduser("~")
+src = [r.replace("Bash(~/", f"Bash({home}/") for r in src]
 p = os.path.expanduser("~/.claude/settings.json")
 if os.path.exists(p):
     shutil.copy(p, p + ".bak." + time.strftime("%Y%m%d%H%M%S"))

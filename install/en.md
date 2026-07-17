@@ -79,6 +79,9 @@ Merge the `permissions.allow` from `claude-code/starter-allowlist.json` into `~/
 ```python
 import json, os, shutil, time
 src = json.load(open("claude-code/starter-allowlist.json"))["permissions"]["allow"]
+# per-machine: Bash() allow rules don't expand ~/$HOME, so resolve to this machine's absolute path at install time
+home = os.path.expanduser("~")
+src = [r.replace("Bash(~/", f"Bash({home}/") for r in src]
 p = os.path.expanduser("~/.claude/settings.json")
 if os.path.exists(p):
     shutil.copy(p, p + ".bak." + time.strftime("%Y%m%d%H%M%S"))
